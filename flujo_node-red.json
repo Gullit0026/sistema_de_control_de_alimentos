@@ -1,0 +1,582 @@
+[
+    {
+        "id": "3f19d769c907b38d",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "bc30973f8b365a4f",
+        "type": "mqtt in",
+        "z": "3f19d769c907b38d",
+        "name": "",
+        "topic": "iot/planta",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "4eac9ff0774942f9",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 100,
+        "y": 380,
+        "wires": [
+            [
+                "4876be92103dee41"
+            ]
+        ]
+    },
+    {
+        "id": "4876be92103dee41",
+        "type": "json",
+        "z": "3f19d769c907b38d",
+        "name": "",
+        "property": "payload",
+        "action": "obj",
+        "pretty": false,
+        "x": 250,
+        "y": 380,
+        "wires": [
+            [
+                "30ba7e900b481cc1"
+            ]
+        ]
+    },
+    {
+        "id": "30ba7e900b481cc1",
+        "type": "function",
+        "z": "3f19d769c907b38d",
+        "name": "function 1",
+        "func": "let d = msg.payload;\n\nif (d.temperatura === undefined || d.humedad === undefined) {\n    node.warn(\"Datos incompletos\");\n    return null;\n}\n\nlet estado_temp = (d.temperatura < 35) ? \"baja\" : (d.temperatura <= 15) ? \"adecuada\" : \"alta\";\nlet estado_hum = (d.humedad < 20) ? \"adecuada\" : \"exceso\";\nlet estado_luz = (d.luz1 == 0) ? \"adecuada\" : \"exceso\";\n\nlet alertas = [];\nif (estado_temp === \"alta\") alertas.push(\"Temperatura alta\");\nif (estado_hum === \"exceso\") alertas.push(\"Humedad alta\");\nif (estado_luz === \"exceso\") alertas.push(\"Exceso de luz\");\n\nmsg.payload = {\n    device: d.device || \"ESP8266\",\n    temperatura: d.temperatura,\n    humedad: d.humedad,\n    luz1: d.luz1,\n    estado_temp,\n    estado_hum,\n    estado_luz,\n    alertas,\n    fecha: new Date()\n};\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 380,
+        "y": 380,
+        "wires": [
+            [
+                "0d0b7f142ffd4ad9",
+                "86e92ef81b27359e"
+            ]
+        ]
+    },
+    {
+        "id": "90815efc8388bda9",
+        "type": "debug",
+        "z": "3f19d769c907b38d",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 720,
+        "y": 380,
+        "wires": []
+    },
+    {
+        "id": "0d0b7f142ffd4ad9",
+        "type": "mongodb4",
+        "z": "3f19d769c907b38d",
+        "clientNode": "4b5f659a5ce9db9c",
+        "mode": "collection",
+        "collection": "datos",
+        "operation": "insertOne",
+        "output": "toArray",
+        "maxTimeMS": "0",
+        "handleDocId": false,
+        "name": "MongoDB Atlas",
+        "x": 560,
+        "y": 380,
+        "wires": [
+            [
+                "90815efc8388bda9"
+            ]
+        ]
+    },
+    {
+        "id": "6e4e25d2cf9f596f",
+        "type": "inject",
+        "z": "3f19d769c907b38d",
+        "name": "Simulador",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "20",
+        "crontab": "",
+        "once": false,
+        "onceDelay": "20",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 130,
+        "y": 480,
+        "wires": [
+            [
+                "5320e3311a658d7e"
+            ]
+        ]
+    },
+    {
+        "id": "5320e3311a658d7e",
+        "type": "function",
+        "z": "3f19d769c907b38d",
+        "name": "function 2",
+        "func": "msg.payload = {\n    temperatura: Math.floor(Math.random()*10)+10,\n    humedad: Math.floor(Math.random()*20)+10,\n    luz1: Math.round(Math.random()),\n    device: \"SIMULADO_01\"\n};\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 300,
+        "y": 480,
+        "wires": [
+            [
+                "0136bc05ce1abaa3"
+            ]
+        ]
+    },
+    {
+        "id": "0136bc05ce1abaa3",
+        "type": "mqtt out",
+        "z": "3f19d769c907b38d",
+        "name": "",
+        "topic": "iot/planta",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "4eac9ff0774942f9",
+        "x": 460,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "86e92ef81b27359e",
+        "type": "function",
+        "z": "3f19d769c907b38d",
+        "name": "Preparar dashboard",
+        "func": "let d = msg.payload;\n\nlet cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : '';\n\nlet msgTempChart = { payload: d.temperatura, topic: \"Temperatura\" };\nlet msgTempGauge = { payload: d.temperatura };\nlet msgHumChart  = { payload: d.humedad,     topic: \"Humedad\" };\nlet msgHumGauge  = { payload: d.humedad };\nlet msgLuz       = { payload: cap(d.estado_luz) };\nlet msgAlertas   = { payload: (d.alertas && d.alertas.length > 0) ? d.alertas.join(' | ') : 'Sin alertas' };\n\nreturn [ msgTempChart, msgTempGauge, msgHumChart, msgHumGauge, msgLuz, msgAlertas ];",
+        "outputs": 6,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 600,
+        "y": 200,
+        "wires": [
+            [
+                "110271f15596ddf3"
+            ],
+            [
+                "1f13aec86459593a"
+            ],
+            [
+                "393c79e8a66cee33"
+            ],
+            [
+                "ca9bab4786fa7d34"
+            ],
+            [
+                "bba543783805a1fe"
+            ],
+            [
+                "e50b71af69e5625d"
+            ]
+        ]
+    },
+    {
+        "id": "110271f15596ddf3",
+        "type": "ui_chart",
+        "z": "3f19d769c907b38d",
+        "name": "Gráfica temperatura",
+        "group": "bdd9c35f25e57f18",
+        "order": 2,
+        "width": 6,
+        "height": 4,
+        "label": "Temperatura (°C)",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "Sin datos",
+        "dot": false,
+        "ymin": "0",
+        "ymax": "50",
+        "removeOlder": 1,
+        "removeOlderPoints": "100",
+        "removeOlderUnit": "3600",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#e74c3c",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "x": 1040,
+        "y": 140,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "1f13aec86459593a",
+        "type": "ui_gauge",
+        "z": "3f19d769c907b38d",
+        "name": "Gauge temperatura",
+        "group": "bdd9c35f25e57f18",
+        "order": 1,
+        "width": 3,
+        "height": 3,
+        "gtype": "gage",
+        "title": "Temperatura",
+        "label": "°C",
+        "format": "{{value}}",
+        "min": 0,
+        "max": 50,
+        "colors": [
+            "#3498db",
+            "#2ecc71",
+            "#e74c3c"
+        ],
+        "seg1": 18,
+        "seg2": 30,
+        "diff": false,
+        "className": "",
+        "x": 1030,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "393c79e8a66cee33",
+        "type": "ui_chart",
+        "z": "3f19d769c907b38d",
+        "name": "Gráfica humedad",
+        "group": "790b4078851306ab",
+        "order": 2,
+        "width": 6,
+        "height": 4,
+        "label": "Humedad (%)",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "Sin datos",
+        "dot": false,
+        "ymin": "0",
+        "ymax": "100",
+        "removeOlder": 1,
+        "removeOlderPoints": "100",
+        "removeOlderUnit": "3600",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#3498db",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "x": 1030,
+        "y": 220,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "ca9bab4786fa7d34",
+        "type": "ui_gauge",
+        "z": "3f19d769c907b38d",
+        "name": "Gauge humedad",
+        "group": "790b4078851306ab",
+        "order": 1,
+        "width": 3,
+        "height": 3,
+        "gtype": "gage",
+        "title": "Humedad",
+        "label": "%",
+        "format": "{{value}}",
+        "min": 0,
+        "max": 100,
+        "colors": [
+            "#e74c3c",
+            "#2ecc71",
+            "#e74c3c"
+        ],
+        "seg1": 30,
+        "seg2": 70,
+        "diff": false,
+        "className": "",
+        "x": 1030,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "bba543783805a1fe",
+        "type": "ui_text",
+        "z": "3f19d769c907b38d",
+        "group": "2b1f4719ab0c1f00",
+        "order": 1,
+        "width": 3,
+        "height": 1,
+        "name": "Estado luz",
+        "label": "💡 Estado luz",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "className": "",
+        "x": 1010,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "e50b71af69e5625d",
+        "type": "ui_text",
+        "z": "3f19d769c907b38d",
+        "group": "2b1f4719ab0c1f00",
+        "order": 2,
+        "width": 6,
+        "height": 1,
+        "name": "Alertas activas",
+        "label": "⚠️ Alertas",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "className": "",
+        "x": 1020,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "2ba335c272c0bc79",
+        "type": "ui_slider",
+        "z": "3f19d769c907b38d",
+        "name": "Luminosidad planta",
+        "label": "Luminosidad planta",
+        "tooltip": "0 = apagado  |  255 = máximo brillo",
+        "group": "034ef624b9f31193",
+        "order": 1,
+        "width": 6,
+        "height": 1,
+        "passthru": true,
+        "outs": "all",
+        "topic": "luminosidad",
+        "topicType": "str",
+        "min": 0,
+        "max": 255,
+        "step": 1,
+        "x": 130,
+        "y": 560,
+        "wires": [
+            [
+                "3e63616237dbba94",
+                "1d352555dad6ac3e"
+            ]
+        ]
+    },
+    {
+        "id": "3e63616237dbba94",
+        "type": "function",
+        "z": "3f19d769c907b38d",
+        "name": "Formatear valor PWM",
+        "func": "msg.payload = String(Math.round(msg.payload));\nmsg.topic = \"iot/planta/control\";\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 350,
+        "y": 560,
+        "wires": [
+            [
+                "6626075f9f29982d"
+            ]
+        ]
+    },
+    {
+        "id": "6626075f9f29982d",
+        "type": "mqtt out",
+        "z": "3f19d769c907b38d",
+        "name": "Enviar brillo al ESP8266",
+        "topic": "iot/planta/control",
+        "qos": "1",
+        "retain": "",
+        "broker": "4eac9ff0774942f9",
+        "x": 610,
+        "y": 560,
+        "wires": []
+    },
+    {
+        "id": "1d352555dad6ac3e",
+        "type": "debug",
+        "z": "3f19d769c907b38d",
+        "name": "debug slider",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 350,
+        "y": 620,
+        "wires": []
+    },
+    {
+        "id": "4eac9ff0774942f9",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "broker.emqx.io",
+        "port": 1883,
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "4b5f659a5ce9db9c",
+        "type": "mongodb4-client",
+        "name": "",
+        "protocol": "mongodb",
+        "hostname": "",
+        "port": "",
+        "dbName": "IoT",
+        "appName": "",
+        "authSource": "",
+        "authMechanism": "DEFAULT",
+        "tls": true,
+        "tlsCAFile": "",
+        "tlsCertificateKeyFile": "",
+        "tlsInsecure": false,
+        "connectTimeoutMS": "30000",
+        "socketTimeoutMS": "0",
+        "minPoolSize": "0",
+        "maxPoolSize": "100",
+        "maxIdleTimeMS": "0",
+        "uri": "mongodb://iot_user:09YTUbcDKWQ17VlM@ac-73ty9wf-shard-00-00.23zjybn.mongodb.net:27017,ac-73ty9wf-shard-00-01.23zjybn.mongodb.net:27017,ac-73ty9wf-shard-00-02.23zjybn.mongodb.net:27017/?ssl=true&replicaSet=atlas-vaocpa-shard-0&authSource=admin&appName=Cluster0",
+        "advanced": "{}",
+        "uriTabActive": "tab-uri-advanced"
+    },
+    {
+        "id": "bdd9c35f25e57f18",
+        "type": "ui_group",
+        "name": "Temperatura",
+        "tab": "22817f9ae8415633",
+        "order": 1,
+        "disp": true,
+        "width": 6,
+        "collapse": false
+    },
+    {
+        "id": "790b4078851306ab",
+        "type": "ui_group",
+        "name": "Humedad",
+        "tab": "22817f9ae8415633",
+        "order": 2,
+        "disp": true,
+        "width": 6,
+        "collapse": false
+    },
+    {
+        "id": "2b1f4719ab0c1f00",
+        "type": "ui_group",
+        "name": "Estado y Alertas",
+        "tab": "22817f9ae8415633",
+        "order": 3,
+        "disp": true,
+        "width": 6,
+        "collapse": false
+    },
+    {
+        "id": "034ef624b9f31193",
+        "type": "ui_group",
+        "name": "Control LED",
+        "tab": "d21afd95a50d33f1",
+        "order": 1,
+        "disp": true,
+        "width": 6,
+        "collapse": false
+    },
+    {
+        "id": "22817f9ae8415633",
+        "type": "ui_tab",
+        "name": "Monitoreo Planta",
+        "icon": "dashboard",
+        "order": 1,
+        "disabled": false,
+        "hidden": false
+    },
+    {
+        "id": "d21afd95a50d33f1",
+        "type": "ui_tab",
+        "name": "Control Planta",
+        "icon": "settings",
+        "order": 2,
+        "disabled": false,
+        "hidden": false
+    },
+    {
+        "id": "a0d998a1d44db76b",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-contrib-mongodb4": "3.4.0",
+            "node-red-dashboard": "3.6.6"
+        }
+    }
+]

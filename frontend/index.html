@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IoT Almacenamiento de Alimentos — Monitor</title>
+
+    <!-- Fuentes -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@300;400;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+
+    <!-- Tu CSS externo -->
+    <link rel="stylesheet" href="style.css">
+  </head>
+
+  <body>
+
+    <!-- ── Header ────────────────────────────────────────────────── -->
+    <header>
+      <div class="logo">
+        <div class="logo-icon"></div>
+        <div>
+          <div class="logo-text">IoT Planta</div>
+          <div class="logo-sub">Sistema de monitoreo</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="status-pill">
+          <div class="status-dot" id="conn-dot"></div>
+          <span id="conn-label">CONECTANDO</span>
+        </div>
+        <div id="last-update">—</div>
+      </div>
+    </header>
+
+    <!-- ── Tabs ───────────────────────────────────────────────────── -->
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="monitoreo">Monitoreo planta</button>
+      <button class="tab-btn" data-tab="control">Control planta</button>
+      <button class="tab-btn" data-tab="analisis">Análisis</button>
+      
+      <input type="text" id="busqueda" placeholder="Buscar dispositivo...">
+
+      <div class="selects">
+        <select id="select-activos">
+          <option value="all">dispositivos activos</option>
+        </select>
+        <select id="select-inactivos">
+          <option value="all">dispositivos inactivos</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- ── Main ───────────────────────────────────────────────────── -->
+    <main>
+
+      <!-- ══ TAB: MONITOREO ═══════════════════════════════════════ -->
+      <div class="tab-panel active" id="tab-monitoreo">
+
+        <!-- Temperatura -->
+        <div class="section-title">Temperatura</div>
+        <div class="grid-2-1">
+          <div class="card">
+            <div class="card-label">Gráfica temperatura — últimas lecturas</div>
+            <div class="chart-box"><canvas id="chartTemp"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-label">Valor actual</div>
+            <div style="display:flex; flex-direction:column; align-items:center; padding:16px 0; gap:16px;">
+              <div class="gauge-wrap">
+                <svg class="gauge-svg" viewBox="0 0 140 85">
+                  <path d="M10,80 A60,60,0,0,1,130,80" fill="none" stroke="#1e2535" stroke-width="10" stroke-linecap="round"/>
+                  <path id="gauge-temp-arc" d="M10,80 A60,60,0,0,1,130,80" fill="none" stroke="#e74c3c" stroke-width="10" stroke-linecap="round"
+                    stroke-dasharray="188.5" stroke-dashoffset="188.5" style="transition:stroke-dashoffset 0.8s ease"/>
+                  <text id="gauge-temp-val" x="70" y="72" text-anchor="middle" fill="#fff" font-family="'Share Tech Mono'" font-size="22">--</text>
+                  <text x="70" y="84" text-anchor="middle" fill="#6b7a99" font-family="'Barlow'" font-size="9">°C  (0–50)</text>
+                </svg>
+              </div>
+              <div class="big-val" id="val-temp"><span>--</span><span class="unit">°C</span></div>
+              <div class="val-meta">Estado: <span id="badge-temp" class="badge">--</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Humedad -->
+        <div class="gap-section">
+          <div class="section-title">Humedad</div>
+          <div class="grid-2-1">
+            <div class="card">
+              <div class="card-label">Gráfica humedad — últimas lecturas</div>
+              <div class="chart-box"><canvas id="chartHum"></canvas></div>
+            </div>
+            <div class="card">
+              <div class="card-label">Valor actual</div>
+              <div style="display:flex; flex-direction:column; align-items:center; padding:16px 0; gap:16px;">
+                <div class="gauge-wrap">
+                  <svg class="gauge-svg" viewBox="0 0 140 85">
+                    <path d="M10,80 A60,60,0,0,1,130,80" fill="none" stroke="#1e2535" stroke-width="10" stroke-linecap="round"/>
+                    <path id="gauge-hum-arc" d="M10,80 A60,60,0,0,1,130,80" fill="none" stroke="#3498db" stroke-width="10" stroke-linecap="round"
+                      stroke-dasharray="188.5" stroke-dashoffset="188.5" style="transition:stroke-dashoffset 0.8s ease"/>
+                    <text id="gauge-hum-val" x="70" y="72" text-anchor="middle" fill="#fff" font-family="'Share Tech Mono'" font-size="22">--</text>
+                    <text x="70" y="84" text-anchor="middle" fill="#6b7a99" font-family="'Barlow'" font-size="9">%  (0–100)</text>
+                  </svg>
+                </div>
+                <div class="big-val" id="val-hum"><span>--</span><span class="unit">%</span></div>
+                <div class="val-meta">Estado: <span id="badge-hum" class="badge">--</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Estado y alertas -->
+        <div class="gap-section">
+          <div class="section-title">Estado y alertas</div>
+          <div class="grid-3">
+            <div class="card">
+              <div class="card-label">Estado luz</div>
+              <div class="luz-indicator">
+                <div class="luz-icon poca" id="luz-icon">💡</div>
+                <div class="luz-label" id="luz-label">Sin datos</div>
+              </div>
+            </div>
+            <div class="card" style="grid-column: span 2;">
+              <div class="card-label">Alertas activas</div>
+              <div style="padding: 8px 0;" id="alertas-strip">
+                <div class="alert-strip ok">
+                  <div class="alert-dot"></div>
+                  <span>Sin datos aún</span>
+                </div>
+              </div>
+              <div style="margin-top: 16px;">
+                <div class="card-label">Últimas lecturas</div>
+                <div class="tbl-scroll">
+                  <table class="data-table" id="tabla-datos">
+                    <thead>
+                      <tr>
+                        <th>Hora</th>
+                        <th>Dispositivo</th>
+                        <th>Temp °C</th>
+                        <th>Hum %</th>
+                        <th>Luz</th>
+                        <th>Alertas</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tabla-body">
+                      <tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:20px;">Cargando datos...</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /tab-monitoreo -->
+
+
+      <!-- ══ TAB: CONTROL ═════════════════════════════════════════ -->
+      <div class="tab-panel" id="tab-control">
+        <div class="section-title">Control LED — luminosidad planta</div>
+
+        <div class="grid-2">
+
+          <!-- Slider PWM -->
+          <div class="card">
+            <div class="card-label">Luminosidad (PWM 0–255) → tópico MQTT: iot/planta/control</div>
+            <div class="pwm-display" id="pwm-display">128</div>
+            <div class="pwm-pct" id="pwm-pct">50% de brillo</div>
+            <div class="pwm-bar-wrap">
+              <div class="pwm-bar" id="pwm-bar" style="width:50%"></div>
+            </div>
+            <input type="range" class="slider-track" id="slider-luz" min="0" max="255" value="128">
+            <div class="slider-labels"><span>0 — Apagado</span><span>255 — Máximo</span></div>
+            <button class="control-btn" id="btn-enviar-pwm">Enviar valor PWM vía API</button>
+          </div>
+
+          <!-- Presets rápidos -->
+          <div class="card">
+            <div class="card-label">Presets rápidos</div>
+            <div style="display:flex; flex-direction:column; gap:10px; margin-top:8px;">
+              <button class="control-btn" onclick="setPreset(0)">Apagar LED (0)</button>
+              <button class="control-btn" onclick="setPreset(64)">Brillo bajo (64 — 25%)</button>
+              <button class="control-btn" onclick="setPreset(128)">Brillo medio (128 — 50%)</button>
+              <button class="control-btn" onclick="setPreset(192)">Brillo alto (192 — 75%)</button>
+              <button class="control-btn" onclick="setPreset(255)">Brillo máximo (255)</button>
+            </div>
+
+            <div style="margin-top: 24px;">
+              <div class="card-label">Limpiar datos inválidos en BD</div>
+              <p style="font-size:12px; color:var(--text-muted); margin:8px 0 12px; line-height:1.5;">
+                Elimina registros con temperatura fuera de [-10, 60] °C o humedad fuera de [0, 100] %.
+              </p>
+              <button class="control-btn danger" id="btn-limpiar">Ejecutar limpieza</button>
+              <div id="limpiar-result" style="margin-top:10px; font-family:var(--mono); font-size:12px; color:var(--text-dim);"></div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Info de cómo funciona el control -->
+        <div class="gap-section">
+          <div class="section-title">Cómo funciona</div>
+          <div class="card">
+            <p style="font-size:13px; color:var(--text-muted); line-height:1.8; max-width:720px;">
+              El slider envía el valor PWM (0–255) a tu API Express en
+              <code style="font-family:var(--mono); color:var(--accent); background:var(--bg3); padding:1px 6px; border-radius:3px;">POST /api/datos</code>
+              con el campo <code style="font-family:var(--mono); color:var(--accent); background:var(--bg3); padding:1px 6px; border-radius:3px;">luz1</code>.
+              Node-RED, que ya tiene el flujo MQTT activo, publica automáticamente el valor en el
+              tópico <code style="font-family:var(--mono); color:var(--accent2); background:var(--bg3); padding:1px 6px; border-radius:3px;">iot/planta/control</code>
+              al recibir el dato del sensor, y el ESP8266 aplica el PWM al LED.
+              El slider del dashboard de Node-RED también sigue funcionando de forma independiente.
+            </p>
+          </div>
+        </div>
+      </div><!-- /tab-control -->
+
+
+      <!-- ══ TAB: ANÁLISIS ════════════════════════════════════════ -->
+      <div class="tab-panel" id="tab-analisis">
+
+        <div class="section-title">Estadísticas generales</div>
+        <div class="grid-4">
+          <div class="card stat-card">
+            <div class="stat-label">Temp promedio</div>
+            <div class="stat-val" id="avg-temp">--<span class="unit"> °C</span></div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-label">Hum promedio</div>
+            <div class="stat-val" id="avg-hum">--<span class="unit"> %</span></div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-label">Total registros</div>
+            <div class="stat-val" id="total-reg">--</div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-label">Dispositivos activos</div>
+            <div class="stat-val" id="total-devices">--</div>
+          </div>
+        </div>
+
+        <div class="gap-section">
+          <div class="grid-2">
+
+            <!-- Frecuencia de alertas -->
+            <div class="card">
+              <div class="card-label">Frecuencia de alertas</div>
+              <div class="chart-bar-box"><canvas id="chartAlertas"></canvas></div>
+              <div class="freq-bar-list" id="freq-list"></div>
+            </div>
+
+            <!-- Por dispositivo -->
+            <div class="card">
+              <div class="card-label">Registros por dispositivo</div>
+              <div id="device-list" style="margin-top:8px;"></div>
+
+              <div style="margin-top:24px;">
+                <div class="card-label">Estados de temperatura</div>
+                <div class="chart-bar-box" style="height:180px;"><canvas id="chartEstados"></canvas></div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="gap-section">
+          <div class="section-title">Últimas alertas registradas</div>
+          <div class="card">
+            <div class="tbl-scroll">
+              <table class="data-table" id="tabla-alertas">
+                <thead>
+                  <tr>
+                    <th>Hora</th>
+                    <th>Dispositivo</th>
+                    <th>Temp °C</th>
+                    <th>Hum %</th>
+                    <th>Alertas</th>
+                  </tr>
+                </thead>
+                <tbody id="alertas-body">
+                  <tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:20px;">Cargando...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /tab-analisis -->
+
+    </main>
+
+    <!-- ── Toast container ────────────────────────────────────────── -->
+    <div id="toast"></div>
+    
+    <script src="script.js"></script>
+  </body>
+</html>
