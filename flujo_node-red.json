@@ -49,7 +49,7 @@
         "type": "function",
         "z": "3f19d769c907b38d",
         "name": "function 1",
-        "func": "let d = msg.payload;\n\nif (d.temperatura === undefined || d.humedad === undefined) {\n    node.warn(\"Datos incompletos\");\n    return null;\n}\n\nlet estado_temp = (d.temperatura < 35) ? \"baja\" : (d.temperatura <= 15) ? \"adecuada\" : \"alta\";\nlet estado_hum = (d.humedad < 20) ? \"adecuada\" : \"exceso\";\nlet estado_luz = (d.luz1 == 0) ? \"adecuada\" : \"exceso\";\n\nlet alertas = [];\nif (estado_temp === \"alta\") alertas.push(\"Temperatura alta\");\nif (estado_hum === \"exceso\") alertas.push(\"Humedad alta\");\nif (estado_luz === \"exceso\") alertas.push(\"Exceso de luz\");\n\nmsg.payload = {\n    device: d.device || \"ESP8266\",\n    temperatura: d.temperatura,\n    humedad: d.humedad,\n    luz1: d.luz1,\n    estado_temp,\n    estado_hum,\n    estado_luz,\n    alertas,\n    fecha: new Date()\n};\n\nreturn msg;",
+        "func": "let d = msg.payload;\n\nif (d.temperatura === undefined || d.humedad === undefined || d.luz1 === undefined) {\n    node.warn(\"Datos incompletos\");\n    return null;\n}\n\nlet estado_temp =\n    (d.temperatura < 0) ? \"baja\" :\n        (d.temperatura <= 10) ? \"adecuada\" :\n            \"alta\";\n\nlet estado_hum =\n    (d.humedad < 15) ? \"adecuada\" :\n            \"alta\";\n\nlet estado_luz =\n    (d.luz1 == 0) ? \"adecuada\" : \"alta\";\n\nlet alertas = [];\n\nif (estado_temp !== \"adecuada\") {\n    alertas.push(`Temperatura ${estado_temp}`);\n}\n\nif (estado_hum !== \"adecuada\") {\n    alertas.push(`Humedad ${estado_hum}`);\n}\n\nif (estado_luz !== \"adecuada\") {\n    alertas.push(`Luz ${estado_luz}`);\n}\n\n\nmsg.payload = {\n    device: d.device || \"Desconocido\",\n    temperatura: d.temperatura,\n    humedad: d.humedad,\n    luz1: d.luz1,\n    estado_temp,\n    estado_hum,\n    estado_luz,\n    alertas,\n    fecha: new Date()\n};\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -136,7 +136,7 @@
         "type": "function",
         "z": "3f19d769c907b38d",
         "name": "function 2",
-        "func": "msg.payload = {\n    temperatura: Math.floor(Math.random()*10)+10,\n    humedad: Math.floor(Math.random()*20)+10,\n    luz1: Math.round(Math.random()),\n    device: \"SIMULADO_01\"\n};\n\nreturn msg;",
+        "func": "msg.payload = {\n    temperatura: Math.floor(Math.random()*10)+10,\n    humedad: Math.floor(Math.random()*20)+10,\n    //luz1: Math.round(Math.random()),\n    luz1: 0,\n    device: \"SIMULADO_02\"\n};\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -398,6 +398,7 @@
         "min": 0,
         "max": 255,
         "step": 1,
+        "className": "",
         "x": 130,
         "y": 560,
         "wires": [
@@ -435,6 +436,11 @@
         "topic": "iot/planta/control",
         "qos": "1",
         "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
         "broker": "4eac9ff0774942f9",
         "x": 610,
         "y": 560,
@@ -455,6 +461,71 @@
         "statusType": "auto",
         "x": 350,
         "y": 620,
+        "wires": []
+    },
+    {
+        "id": "f3d0afb6b4770eb5",
+        "type": "inject",
+        "z": "3f19d769c907b38d",
+        "name": "Simulador Datos Erroneos",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "1",
+        "crontab": "",
+        "once": false,
+        "onceDelay": "20",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 180,
+        "y": 700,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "44ca7288e0fb6627",
+        "type": "function",
+        "z": "3f19d769c907b38d",
+        "name": "function 3",
+        "func": "msg.payload = {\n    temperatura: Math.floor(Math.random()*10)+800,\n    humedad: Math.floor(Math.random()*2)-30,\n    luz1: Math.round(Math.random()),\n    device: \"SIMULADO_02\"\n};\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 400,
+        "y": 700,
+        "wires": [
+            [
+                "8af3719f810736ea"
+            ]
+        ]
+    },
+    {
+        "id": "8af3719f810736ea",
+        "type": "mqtt out",
+        "z": "3f19d769c907b38d",
+        "name": "",
+        "topic": "iot/planta",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "4eac9ff0774942f9",
+        "x": 580,
+        "y": 700,
         "wires": []
     },
     {
@@ -571,7 +642,7 @@
         "hidden": false
     },
     {
-        "id": "a0d998a1d44db76b",
+        "id": "267c6f73f994e947",
         "type": "global-config",
         "env": [],
         "modules": {
