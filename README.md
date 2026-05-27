@@ -108,7 +108,9 @@ sistema_de_control_de_alimentos/
 │   ├── styles.css
 │   └── scripts.js
 └── esp8266/                      # Código del microcontrolador
-    └── main.ino
+|    └── main.ino
+|
+|__ JSON del flujo en Node-Red
 ```
 
 ---
