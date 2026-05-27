@@ -7,23 +7,26 @@ function col() {
   return obtenerDb().collection(COLECCION);
 }
 
-/**
- * Inserta un documento de sensor ya procesado.
- */
+// Inserta un documento de sensor ya procesado.
 async function insertar(documento) {
   const resultado = await col().insertOne(documento);
   return resultado;
 }
 
-/**
- * Devuelve los últimos N registros ordenados por fecha descendente.
- * Si se pasa un dispositivo, filtra por ese device.
- */
+// Devuelve los últimos N registros ordenados por fecha descendente, Si se pasa un dispositivo, filtra por ese device.
 async function obtenerUltimos(limite = 20, dispositivo = null) {
-  const matchStage = dispositivo ? { $match: { device: dispositivo } } : null;
+
+  if (!dispositivo) {
+    return [];
+  }
+
   const pipeline = [];
 
-  if (matchStage) pipeline.push(matchStage);
+  pipeline.push({
+    $match: {
+      device: dispositivo
+    }
+  });
 
   pipeline.push({ $sort: { fecha: -1 } });
   pipeline.push({ $limit: limite });
@@ -32,17 +35,21 @@ async function obtenerUltimos(limite = 20, dispositivo = null) {
   return col().aggregate(pipeline).toArray();
 }
 
-/**
- * Devuelve registros que tengan al menos una alerta.
- */
-async function obtenerConAlertas(limite = 50, dispositivo) {
-  const matchStage = dispositivo
-    ? { $match: { 'alertas.0': { $exists: true }, device: dispositivo } }
-    : { $match: { 'alertas.0': { $exists: true } } };
+// Devuelve registros que tengan al menos una alerta.
+async function obtenerConAlertas(limite = 50, dispositivo = null) {
+
+  if (!dispositivo) {
+    return [];
+  }
 
   return col()
     .aggregate([
-      matchStage,
+      {
+        $match: {
+          'alertas.0': { $exists: true },
+          device: dispositivo
+        }
+      },
       { $sort: { fecha: -1 } },
       { $limit: limite },
       { $project: { _id: 0 } },
@@ -50,9 +57,7 @@ async function obtenerConAlertas(limite = 50, dispositivo) {
     .toArray();
 }
 
-/**
- * Elimina documentos con valores fuera de rango o nulos.
- */
+// Elimina documentos con valores fuera de rango o nulos.
 async function eliminarInvalidos() {
   const resultado = await col().deleteMany({
     $or: [
@@ -67,10 +72,7 @@ async function eliminarInvalidos() {
   return resultado.deletedCount;
 }
 
-/**
- * Pipeline de análisis estadístico.
- * Si se pasa un dispositivo, filtra por ese device.
- */
+//Pipeline de análisis estadístico, Si se pasa un dispositivo, filtra por ese device.
 async function obtenerAnalisis(dispositivo) {
   const matchStage = dispositivo ? { $match: { device: dispositivo } } : { $match: {} };
 
@@ -115,24 +117,18 @@ async function obtenerAnalisis(dispositivo) {
   return resultado[0] || {};
 }
 
-/**
- * Devuelve todos los dispositivos únicos.
- */
+//Devuelve todos los dispositivos únicos.
 async function obtenerDispositivos() {
   return col().distinct('device');
 }
 
-/**
- * Devuelve dispositivos que hayan enviado datos en los últimos 30 segundos.
- */
+//Devuelve dispositivos que hayan enviado datos en los últimos 30 segundos.
 async function obtenerDispositivosActivos() {
   const hace30s = new Date(Date.now() - 30 * 1000);
   return col().distinct('device', { fecha: { $gte: hace30s } });
 }
 
-/**
- * Devuelve dispositivos que NO hayan enviado datos en los últimos 30 segundos.
- */
+//Devuelve dispositivos que NO hayan enviado datos en los últimos 30 segundos.
 async function obtenerDispositivosInactivos() {
   const hace30s = new Date(Date.now() - 30 * 1000);
   const activos = await obtenerDispositivosActivos();

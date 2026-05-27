@@ -64,7 +64,7 @@ header {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(11,14,19,0.92);
+  background: rgba(0, 0, 0, 0.92);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
   padding: 0 32px;
@@ -141,35 +141,246 @@ header {
   color: var(--text-dim);
 }
 
+/* TABS BLOQUEABLES */
+
+#tab-monitoreo,
+#tab-control {
+  position: relative;
+}
+
+
+/* OVERLAY */
+
+.overlay-inactivo {
+
+  position: absolute;
+
+  inset: 0;
+
+  background: rgba(15, 15, 15, 0.72);
+
+  backdrop-filter: blur(4px);
+
+  z-index: 999;
+
+  display: flex;
+
+  justify-content: center;
+  align-items: center;
+
+  border-radius: 14px;
+}
+
+
+/* CARD CENTRAL */
+
+.overlay-card {
+
+  background: rgba(28, 28, 28, 0.96);
+
+  border: 1px solid rgba(255,255,255,0.08);
+
+  border-radius: 18px;
+
+  padding: 32px 42px;
+
+  text-align: center;
+
+  max-width: 420px;
+
+  box-shadow:
+    0 12px 40px rgba(0,0,0,0.45);
+}
+
+.overlay-card h2 {
+
+  color: #e74c3c;
+
+  margin-bottom: 14px;
+
+  font-size: 24px;
+}
+
+.overlay-card p {
+
+  color: #d7dde7;
+
+  line-height: 1.7;
+
+  font-size: 15px;
+}
+
+
+/* HIDDEN */
+
+.hidden {
+  display: none;
+}
+
 /* ── Tabs ────────────────────────────────────────────────────── */
 .tabs {
   display: flex;
-  gap: 2px;
+  align-items: center;
+  justify-content: space-between;
+
   padding: 0 32px;
+
   background: var(--bg2);
   border-bottom: 1px solid var(--border);
+
   position: sticky;
   top: 58px;
+
   z-index: 99;
+
+  min-height: 64px;
 }
+
+/* IZQUIERDA */
+.tabs-left {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+/* CENTRO */
+#dispositivo-actual {
+  flex: 1;
+
+  text-align: center;
+
+  font-family: var(--cond);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+
+  color: var(--accent);
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  padding: 0 20px;
+}
+
+/* DERECHA */
+.tabs-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* BOTONES */
 .tab-btn {
   padding: 13px 22px;
+
   font-family: var(--cond);
   font-size: 13px;
   font-weight: 600;
+
   letter-spacing: 0.12em;
   text-transform: uppercase;
+
   color: var(--text-muted);
+
   background: none;
   border: none;
   border-bottom: 2px solid transparent;
+
   cursor: pointer;
-  transition: color var(--transition), border-color var(--transition);
+
+  transition:
+    color var(--transition),
+    border-color var(--transition);
 }
-.tab-btn:hover { color: var(--text); }
+
+.tab-btn:hover {
+  color: var(--text);
+}
+
 .tab-btn.active {
   color: var(--accent);
   border-bottom-color: var(--accent);
+}
+
+/* BUSCADOR */
+#busqueda {
+  width: 220px;
+  height: 38px;
+
+  padding: 0 14px;
+
+  background: var(--bg3);
+
+  border: 1px solid var(--border);
+  border-radius: 8px;
+
+  color: var(--text);
+
+  outline: none;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+/* Hover */
+#busqueda:hover {
+  border-color: white;
+}
+
+/* Focus (cuando escribes) */
+#busqueda:focus {
+  border-color: var(--accent);
+
+  box-shadow:
+    0 0 0 3px rgba(0, 170, 255, 0.15);
+}
+
+
+/* SELECTS */
+.selects {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#select-activos,
+#select-inactivos {
+  height: 38px;
+
+  padding: 0 14px;
+
+  background: var(--bg3);
+
+  border: 1px solid var(--border);
+  border-radius: 8px;
+
+  color: var(--text);
+
+  cursor: pointer;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+/* Hover */
+#select-activos:hover,
+#select-inactivos:hover {
+  border-color: white;
+}
+
+/* Focus */
+#select-activos:focus,
+#select-inactivos:focus {
+  border-color: var(--accent);
+
+  box-shadow:
+    0 0 0 3px rgba(0, 170, 255, 0.15);
+
+  outline: none;
 }
 
 /* ── Main layout ─────────────────────────────────────────────── */
@@ -338,7 +549,7 @@ main {
   padding: 24px;
 }
 .luz-icon {
-  width: 56px; height: 56px;
+  width: 80px; height: 80px;
   border-radius: 50%;
   display: grid;
   place-items: center;
@@ -346,12 +557,18 @@ main {
   transition: all 0.5s;
 }
 .luz-icon.adecuada {
-  background: rgba(255,179,64,0.15);
-  box-shadow: 0 0 20px rgba(255,179,64,0.3), 0 0 60px rgba(255,179,64,0.1);
+  background: rgba(255, 179, 64, 0.116);
+  box-shadow: 0 0 20px rgba(255, 179, 64, 0.192), 0 0 60px rgba(255,179,64,0.1);
 }
-.luz-icon.poca {
-  background: rgba(74,85,104,0.3);
-  filter: grayscale(1);
+.luz-icon.Alta {
+
+  background:
+    rgba(255, 70, 70, 0.18);
+
+  box-shadow:
+    0 0 20px rgba(255, 70, 70, 0.35),
+    0 0 55px rgba(255, 90, 90, 0.14);
+
 }
 .luz-label {
   font-family: var(--cond);

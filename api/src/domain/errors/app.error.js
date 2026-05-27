@@ -1,7 +1,7 @@
 /**
  * Error de dominio con código HTTP asociado.
  * Permite que la capa de presentación responda con el status correcto
- * sin saber nada de la lógica de negocio.
+ * sin saber nada de la lógica del proyecto.
  */
 class AppError extends Error {
   constructor(mensaje, statusCode = 500) {

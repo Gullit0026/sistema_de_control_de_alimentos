@@ -3,6 +3,7 @@ const cors = require('cors');
 const path = require('path');
 const datosRoutes = require('./presentation/routes/datos.routes');
 const analisisRoutes = require('./presentation/routes/analisis.routes');
+const controlRoutes  = require('./presentation/routes/control.routes');
 const { manejarError } = require('./presentation/middlewares/error.middleware');
 
 const app = express();
@@ -16,6 +17,7 @@ app.use(express.static(path.join(__dirname, '../../frontend')));
 // Rutas API
 app.use('/api/datos', datosRoutes);
 app.use('/api/analisis', analisisRoutes);
+app.use('/api/control', controlRoutes);
 
 // Ruta raíz informativa
 app.get('/', (req, res) => {
@@ -24,7 +26,7 @@ app.get('/', (req, res) => {
     version: '1.0.0',
     endpoints: [
       'GET  /api/datos',
-      'POST /api/datos',
+      'POST /api/control',
       'GET  /api/datos/alertas',
       'DELETE /api/datos/limpiar',
       'GET  /api/datos/dispositivos',

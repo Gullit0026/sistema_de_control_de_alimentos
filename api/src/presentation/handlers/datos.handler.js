@@ -1,5 +1,5 @@
 const { obtenerDatos, obtenerDispositivos, obtenerDispositivosActivos, obtenerDispositivosInactivos } = require('../../application/use-cases/obtener-datos.usecase');
-const registrarDato = require('../../application/use-cases/registrar-dato.usecase');
+const registrarDato = require('../../application/use-cases/enviar-control');
 const obtenerAlertas = require('../../application/use-cases/obtener-alertas.usecase');
 const limpiarDatos = require('../../application/use-cases/limpiar-datos.usecase');
 
@@ -18,15 +18,6 @@ async function getDispositivos(req, res, next) {
   try {
     const dispositivos = await obtenerDispositivos();
     res.status(200).json({ ok: true, dispositivos });
-  } catch (err) {
-    next(err);
-  }
-}
-
-async function postDato(req, res, next) {
-  try {
-    const dato = await registrarDato(req.body);
-    res.status(201).json({ ok: true, mensaje: 'Dato registrado', dato });
   } catch (err) {
     next(err);
   }
@@ -79,5 +70,5 @@ async function getDispositivosInactivos(req, res, next) {
   }
 }
 
-module.exports = { getDatos, getDispositivos, getDispositivosActivos, getDispositivosInactivos, postDato, getAlertas, deleteLimpiar };
+module.exports = { getDatos, getDispositivos, getDispositivosActivos, getDispositivosInactivos, getAlertas, deleteLimpiar };
 

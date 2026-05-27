@@ -1,10 +1,10 @@
-// ── Configuración ──────────────────────────────────────────────
+// ------------------------- Configuración --------------------------
 const API = 'http://localhost:3000';
-const POLL_MS = 1000; // refresca cada 8 segundos
+const POLL_MS = 1000;
 
 let selectedDevice = null;
 
-// ── Utilidades ─────────────────────────────────────────────────
+// ----------------------------------------- Utilidades ------------------------------------------------------------------------
 function fmt(fecha) {
   if (!fecha) return '—';
   const d = new Date(fecha);
@@ -37,8 +37,9 @@ function setBadge(el, estado) {
   el.className = `badge ${cls}`;
   el.textContent = txt;
 }
+//---------------------------------------------------------------------------------------------------------------
 
-// ── Gauge arc ──────────────────────────────────────────────────
+// ---------------------------------------- Gauge arc ------------------------------------------------------------
 function setGauge(arcId, valId, value, min, max, color) {
   const total = 188.5;
   const pct   = Math.max(0, Math.min(1, (value - min) / (max - min)));
@@ -50,7 +51,7 @@ function setGauge(arcId, valId, value, min, max, color) {
   valEl.textContent = value != null ? value : '--';
 }
 
-// ── Tabs ───────────────────────────────────────────────────────
+// ----------------------------------- Tabs ---------------------------------------------------
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -61,7 +62,175 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   });
 });
 
-// ── Chart.js defaults ──────────────────────────────────────────
+const textoDispositivo =
+  document.getElementById("dispositivo-actual");
+
+const overlayMonitoreo =
+  document.getElementById("overlay-monitoreo");
+
+const overlayControl =
+  document.getElementById("overlay-control");
+
+function actualizarUI() {
+
+  if (!selectedDevice) {
+
+    textoDispositivo.textContent =
+      "Ningún dispositivo seleccionado";
+
+    if (overlayMonitoreo)
+      overlayMonitoreo.classList.add("hidden");
+
+    if (overlayControl)
+      overlayControl.classList.add("hidden");
+
+    return;
+  }
+
+  textoDispositivo.textContent =
+    selectedDevice;
+
+  // DISPOSITIVO INACTIVO
+  if (selectInactivos.value !== "all") {
+
+    if (overlayMonitoreo)
+      overlayMonitoreo.classList.remove("hidden");
+
+    if (overlayControl)
+      overlayControl.classList.remove("hidden");
+
+  } else {
+
+    if (overlayMonitoreo)
+      overlayMonitoreo.classList.add("hidden");
+
+    if (overlayControl)
+      overlayControl.classList.add("hidden");
+  }
+}
+
+document.getElementById('busqueda').addEventListener('input', e => {
+  const filtro = e.target.value.toLowerCase();
+  ['select-activos','select-inactivos'].forEach(id => {
+    const sel = document.getElementById(id);
+    [...sel.options].forEach(opt => {
+      opt.style.display = opt.value.toLowerCase().includes(filtro) ? '' : 'none';
+    });
+  });
+});
+
+// --------------------------------------------------- Selects --------------------------------------------------------------
+async function cargarSelects() {
+  try {
+    const activos = await fetch(`${API}/api/datos/dispositivos/activos`)
+      .then(r => r.json());
+
+    const inactivos = await fetch(`${API}/api/datos/dispositivos/inactivos`)
+      .then(r => r.json());
+
+    const selActivos = document.getElementById('select-activos');
+    const selInactivos = document.getElementById('select-inactivos');
+
+    // Mantener opción por defecto
+    selActivos.innerHTML = `
+      <option value="all">Dispositivos activos</option>
+      ${activos.dispositivos.map(d =>
+        `<option value="${d}">${d}</option>`
+      ).join('')}
+    `;
+
+    selInactivos.innerHTML = `
+      <option value="all">Dispositivos inactivos</option>
+      ${inactivos.dispositivos.map(d =>
+        `<option value="${d}">${d}</option>`
+      ).join('')}
+    `;
+
+  } catch (error) {
+    console.error('Error cargando dispositivos:', error);
+  }
+}
+
+cargarSelects();
+
+const selectActivos = document.getElementById('select-activos');
+const selectInactivos = document.getElementById('select-inactivos');
+
+selectActivos.addEventListener('change', e => {
+
+  const value = e.target.value;
+
+  // Si vuelve a ALL
+  if (value === 'all') {
+    selectedDevice = null;
+
+    actualizarUI();
+    cargarDatos();
+    cargarAnalisis();
+
+    return;
+  }
+
+  // Guardar dispositivo seleccionado
+  selectedDevice = value;
+
+  // Resetear el otro select
+  selectInactivos.value = 'all';
+
+  // Cargar SOLO ese dispositivo
+  actualizarUI();
+  cargarDatos(selectedDevice);
+  cargarAnalisis(selectedDevice);
+});
+
+selectInactivos.addEventListener('change', e => {
+
+  const value = e.target.value;
+
+  // Si vuelve a ALL
+  if (value === 'all') {
+    selectedDevice = null;
+
+    actualizarUI();
+    cargarDatos();
+    cargarAnalisis();
+
+    return;
+  }
+
+  // Guardar dispositivo seleccionado
+  selectedDevice = value;
+
+  // Resetear el otro select
+  selectActivos.value = 'all';
+
+  // Cargar SOLO ese dispositivo
+  actualizarUI();
+  cargarDatos(selectedDevice);
+  cargarAnalisis(selectedDevice);
+});
+
+function bloquearDefault(selectId) {
+  const select = document.getElementById(selectId);
+
+  if (!select) return;
+
+  select.addEventListener("change", () => {
+    const opcionDefault = select.querySelector('option[value="all"]');
+
+    if (select.value !== "all") {
+      opcionDefault.disabled = true;
+    } else {
+      opcionDefault.disabled = false;
+    }
+  });
+}
+
+bloquearDefault("select-activos");
+bloquearDefault("select-inactivos");
+// --------------------------------------------------------------------------------------------------------------------
+
+// ------------------------------------ Chart.js defaults ----------------------------------------
 Chart.defaults.color          = '#6b7a99';
 Chart.defaults.borderColor    = '#1e2535';
 Chart.defaults.font.family    = "'Share Tech Mono'";
@@ -99,9 +268,9 @@ function makeLineChart(id, label, color) {
 
 const chartTemp = makeLineChart('chartTemp', 'Temperatura °C', '#e74c3c');
 const chartHum  = makeLineChart('chartHum',  'Humedad %',       '#3498db');
+// -----------------------------------------------------------------------------------------------------
 
-// ── Cargar datos (monitoreo) ───────────────────────────────────
-// ── Cargar datos ───────────────────────────────────────────────
+// ------------------------------------------ Cargar datos (monitoreo) -----------------------------------------
 async function cargarDatos(device = selectedDevice) {
   try {
     const url = device 
@@ -135,12 +304,36 @@ async function cargarDatos(device = selectedDevice) {
     // Último dato para los indicadores
     const ultimo = datos[0];
 
-    // Gauges
-    const tempColor = ultimo.temperatura < 18 ? '#3498db' : ultimo.temperatura <= 30 ? '#2ecc71' : '#e74c3c';
-    setGauge('gauge-temp-arc', 'gauge-temp-val', ultimo.temperatura, 0, 50, tempColor);
 
-    const humColor = ultimo.humedad < 30 ? '#e74c3c' : ultimo.humedad <= 70 ? '#2ecc71' : '#e74c3c';
-    setGauge('gauge-hum-arc', 'gauge-hum-val', ultimo.humedad, 0, 100, humColor);
+    // TEMPERATURA (desde API Express)
+    const tempColor =
+        ultimo.estado_temp === "baja" ? "#3498db" :
+        ultimo.estado_temp === "adecuada" ? "#2ecc71" :
+        "#e74c3c";
+
+    setGauge(
+        'gauge-temp-arc',
+        'gauge-temp-val',
+        ultimo.temperatura,
+        0,
+        50,
+        tempColor
+    );
+
+    // HUMEDAD (desde API Express)
+    const humColor =
+        ultimo.estado_hum === "baja" ? "#3498db" :
+        ultimo.estado_hum === "adecuada" ? "#2ecc71" :
+        "#e74c3c";
+
+    setGauge(
+        'gauge-hum-arc',
+        'gauge-hum-val',
+        ultimo.humedad,
+        0,
+        100,
+        humColor
+    );
 
     // Big values
     document.getElementById('val-temp').innerHTML =
@@ -154,8 +347,8 @@ async function cargarDatos(device = selectedDevice) {
 
     // Luz
     const esAdecuada = ultimo.estado_luz === 'adecuada';
-    document.getElementById('luz-icon').className  = `luz-icon ${esAdecuada ? 'adecuada' : 'poca'}`;
-    document.getElementById('luz-label').textContent = esAdecuada ? 'Adecuada' : 'Poca luz';
+    document.getElementById('luz-icon').className  = `luz-icon ${esAdecuada ? 'adecuada' : 'Alta'}`;
+    document.getElementById('luz-label').textContent = esAdecuada ? 'Adecuada' : 'Exceso de luz';
 
     // Alertas strip
     const strip = document.getElementById('alertas-strip');
@@ -179,7 +372,7 @@ async function cargarDatos(device = selectedDevice) {
         <td style="color:var(--accent2)">${d.device || '—'}</td>
         <td>${d.temperatura ?? '—'}</td>
         <td>${d.humedad ?? '—'}</td>
-        <td>${d.estado_luz === 'adecuada' ? '💡 Adecuada' : '🌑 Poca'}</td>
+        <td>${d.estado_luz === 'adecuada' ? '💡 Adecuada' : '🔴 Alta'}</td>
         <td>${d.alertas && d.alertas.length ? d.alertas.join(', ') : '<span style="color:var(--text-dim)">Sin alertas</span>'}</td>
       </tr>
     `).join('');
@@ -189,8 +382,9 @@ async function cargarDatos(device = selectedDevice) {
     console.error('Error al cargar datos:', e);
   }
 }
+// -----------------------------------------------------------------------------------------------------------------------------------
 
-// ── Cargar análisis ────────────────────────────────────────────
+// ----------------------------------------------------- Cargar análisis -------------------------------------------------------------
 let chartAlertas = null;
 let chartEstados = null;
 
@@ -329,8 +523,9 @@ async function cargarAnalisis(device = selectedDevice) {
     toast('Error al cargar análisis', 'err');
   }
 }
+// -----------------------------------------------------------------------------------------------------------------------------------
 
-// ── Control — Slider PWM ───────────────────────────────────────
+// ---------------------------------------------------- Control — Slider PWM -----------------------------------------------
 const slider = document.getElementById('slider-luz');
 slider.addEventListener('input', () => {
   const v = parseInt(slider.value);
@@ -346,13 +541,11 @@ document.getElementById('btn-enviar-pwm').addEventListener('click', async () => 
     return;
   }
   try {
-    const res = await fetch(`${API}/api/datos`, {
+    const res = await fetch(`${API}/api/control`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        temperatura: 25,
-        humedad: 50,
-        luz1: v > 0 ? 1 : 0,
+        pwm: v,
         device: selectedDevice
       })
     });
@@ -364,7 +557,17 @@ document.getElementById('btn-enviar-pwm').addEventListener('click', async () => 
   }
 });
 
-// ── Control — Limpiar BD ───────────────────────────────────────
+function setPreset(valor) {
+  slider.value = valor;
+  document.getElementById('pwm-display').textContent = valor;
+  document.getElementById('pwm-pct').textContent =
+    Math.round(valor / 255 * 100) + '% de brillo';
+  document.getElementById('pwm-bar').style.width =
+    (valor / 255 * 100) + '%';
+}
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+// ------------------------- Control — Limpiar BD ----------------------------------
 document.getElementById('btn-limpiar').addEventListener('click', async () => {
   if (!confirm('¿Eliminar todos los registros con datos inválidos?')) return;
   try {
@@ -380,112 +583,6 @@ document.getElementById('btn-limpiar').addEventListener('click', async () => {
   } catch (e) {
     toast('No se pudo conectar con la API', 'err');
   }
-});
-
-async function cargarSelects() {
-  try {
-    const activos = await fetch(`${API}/api/datos/dispositivos/activos`)
-      .then(r => r.json());
-
-    const inactivos = await fetch(`${API}/api/datos/dispositivos/inactivos`)
-      .then(r => r.json());
-
-    const selActivos = document.getElementById('select-activos');
-    const selInactivos = document.getElementById('select-inactivos');
-
-    // Mantener opción por defecto
-    selActivos.innerHTML = `
-      <option value="all">Dispositivos activos</option>
-      ${activos.dispositivos.map(d =>
-        `<option value="${d}">${d}</option>`
-      ).join('')}
-    `;
-
-    selInactivos.innerHTML = `
-      <option value="all">Dispositivos inactivos</option>
-      ${inactivos.dispositivos.map(d =>
-        `<option value="${d}">${d}</option>`
-      ).join('')}
-    `;
-
-  } catch (error) {
-    console.error('Error cargando dispositivos:', error);
-  }
-}
-
-function mostrarDatos(device = selectedDevice) {
-  fetch(`${API}/api/datos?device=${device}`)
-    .then(r => r.json())
-    .then(json => {
-      document.getElementById('datos-dispositivo').textContent = JSON.stringify(json.datos, null, 2);
-    });
-}
-
-document.getElementById('busqueda').addEventListener('input', e => {
-  const filtro = e.target.value.toLowerCase();
-  ['select-activos','select-inactivos'].forEach(id => {
-    const sel = document.getElementById(id);
-    [...sel.options].forEach(opt => {
-      opt.style.display = opt.value.toLowerCase().includes(filtro) ? '' : 'none';
-    });
-  });
-});
-
-cargarSelects();
-
-// ── Select dispositivos ───────────────────────────────────────
-
-const selectActivos = document.getElementById('select-activos');
-const selectInactivos = document.getElementById('select-inactivos');
-
-selectActivos.addEventListener('change', e => {
-
-  const value = e.target.value;
-
-  // Si vuelve a ALL
-  if (value === 'all') {
-    selectedDevice = null;
-
-    cargarDatos();
-    cargarAnalisis();
-
-    return;
-  }
-
-  // Guardar dispositivo seleccionado
-  selectedDevice = value;
-
-  // Resetear el otro select
-  selectInactivos.value = 'all';
-
-  // Cargar SOLO ese dispositivo
-  cargarDatos(selectedDevice);
-  cargarAnalisis(selectedDevice);
-});
-
-selectInactivos.addEventListener('change', e => {
-
-  const value = e.target.value;
-
-  // Si vuelve a ALL
-  if (value === 'all') {
-    selectedDevice = null;
-
-    cargarDatos();
-    cargarAnalisis();
-
-    return;
-  }
-
-  // Guardar dispositivo seleccionado
-  selectedDevice = value;
-
-  // Resetear el otro select
-  selectActivos.value = 'all';
-
-  // Cargar SOLO ese dispositivo
-  cargarDatos(selectedDevice);
-  cargarAnalisis(selectedDevice);
 });
 
 setInterval(() => {

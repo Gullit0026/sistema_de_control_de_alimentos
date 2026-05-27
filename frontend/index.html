@@ -37,28 +37,54 @@
     </header>
 
     <!-- ── Tabs ───────────────────────────────────────────────────── -->
-    <div class="tabs">
-      <button class="tab-btn active" data-tab="monitoreo">Monitoreo planta</button>
-      <button class="tab-btn" data-tab="control">Control planta</button>
-      <button class="tab-btn" data-tab="analisis">Análisis</button>
-      
-      <input type="text" id="busqueda" placeholder="Buscar dispositivo...">
+<div class="tabs">
+  <div class="tabs-left">
+    <button class="tab-btn active" data-tab="monitoreo">
+      Monitoreo planta
+    </button>
 
-      <div class="selects">
-        <select id="select-activos">
-          <option value="all">dispositivos activos</option>
-        </select>
-        <select id="select-inactivos">
-          <option value="all">dispositivos inactivos</option>
-        </select>
-      </div>
+    <button class="tab-btn" data-tab="control">
+      Control planta
+    </button>
+
+    <button class="tab-btn" data-tab="analisis">
+      Análisis
+    </button>
+  </div>
+
+  <div id="dispositivo-actual">
+    Ningún dispositivo seleccionado
+  </div>
+
+  <div class="tabs-right">
+
+    <input type="text" id="busqueda" placeholder="Buscar dispositivo...">
+
+    <div class="selects">
+      <select id="select-activos">
+        <option value="all"></option>
+      </select>
+
+      <select id="select-inactivos">
+        <option value="all"></option>
+      </select>
     </div>
 
+  </div>
+
+</div>
     <!-- ── Main ───────────────────────────────────────────────────── -->
     <main>
 
       <!-- ══ TAB: MONITOREO ═══════════════════════════════════════ -->
       <div class="tab-panel active" id="tab-monitoreo">
+
+        <div class="overlay-inactivo hidden" id="overlay-monitoreo">
+          <div class="overlay-card">
+            <h2>Dispositivo inactivo</h2>
+            <p>Para poder usar esta sección se debe seleccionar un dispositivo activo</p>
+          </div>
+        </div>
 
         <!-- Temperatura -->
         <div class="section-title">Temperatura</div>
@@ -76,7 +102,7 @@
                   <path id="gauge-temp-arc" d="M10,80 A60,60,0,0,1,130,80" fill="none" stroke="#e74c3c" stroke-width="10" stroke-linecap="round"
                     stroke-dasharray="188.5" stroke-dashoffset="188.5" style="transition:stroke-dashoffset 0.8s ease"/>
                   <text id="gauge-temp-val" x="70" y="72" text-anchor="middle" fill="#fff" font-family="'Share Tech Mono'" font-size="22">--</text>
-                  <text x="70" y="84" text-anchor="middle" fill="#6b7a99" font-family="'Barlow'" font-size="9">°C  (0–50)</text>
+                  <text x="70" y="84" text-anchor="middle" fill="#6b7a99" font-family="'Barlow'" font-size="9">-20 / 50  °C</text>
                 </svg>
               </div>
               <div class="big-val" id="val-temp"><span>--</span><span class="unit">°C</span></div>
@@ -160,6 +186,13 @@
 
       <!-- ══ TAB: CONTROL ═════════════════════════════════════════ -->
       <div class="tab-panel" id="tab-control">
+        <div class="overlay-inactivo hidden" id="overlay-control">
+          <div class="overlay-card">
+            <h2>Dispositivo inactivo</h2>
+            <p>Para poder usar esta sección se debe seleccionar un dispositivo activo</p>
+          </div>
+        </div>
+
         <div class="section-title">Control LED — luminosidad planta</div>
 
         <div class="grid-2">

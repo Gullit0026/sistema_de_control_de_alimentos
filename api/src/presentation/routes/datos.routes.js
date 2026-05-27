@@ -1,7 +1,6 @@
 const { Router } = require('express');
 const {
   getDatos,
-  postDato,
   getAlertas,
   deleteLimpiar,
   getDispositivos,
@@ -21,7 +20,6 @@ router.get('/', getDatos);
 router.get('/dispositivos', getDispositivos);
 router.get('/dispositivos/activos', getDispositivosActivos);
 router.get('/dispositivos/inactivos', getDispositivosInactivos);
-router.post('/', postDato);
 router.get('/alertas', getAlertas);
 router.delete('/limpiar', deleteLimpiar);
 

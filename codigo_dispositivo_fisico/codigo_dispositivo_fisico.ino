@@ -23,7 +23,7 @@ const char* password = "julian123";
 const char* mqtt_server = "broker.emqx.io";
 const int   mqtt_port   = 1883;
 const char* mqtt_topic  = "iot/planta";
-const char* device_id   = "ESP32_01";
+const char* device_id   = "ESP8266";
 
 // --- NTP ---
 const char* ntpServer      = "pool.ntp.org";
